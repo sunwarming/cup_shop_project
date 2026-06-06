@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CupStore | Магазин кружек{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-cup-hot-fill me-2 text-warning"></i>
+                <strong>CupStore</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-span"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog/">Каталог</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cart/">Корзина</a></li>
+                </ul>
+                <div class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <span class="navbar-text me-3 text-light">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </span>
+                        <a href="/admin/logout/" class="btn btn-outline-danger btn-sm">Выйти</a>
+                    {% else %}
+                        <a href="/admin/login/" class="btn btn-outline-warning btn-sm">Войти</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3" id="alert-container"></div>
+
+    <main class="flex-grow-1 my-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-dark text-light py-4 mt-auto border-top border-warning border-3">
+        <div class="container text-center">
+            <p class="mb-1">© 2026 CupStore — Эксклюзивные тематические кружки и надежные термосы.</p>
+            <small class="text-muted">Лабораторная работа по веб-программированию. Выполнил Козик Николай.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const csrftoken = '{{ csrf_token }}';
+    </script>
+    
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

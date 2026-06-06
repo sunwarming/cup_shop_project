@@ -1,0 +1,20 @@
+/* Тематические стили для CupStore */
+.hero-section {
+    background: linear-gradient(135deg, #4e3629 0%, #2b1d16 100%);
+    color: #f5f2eb;
+}
+.card-product {
+    transition: transform 0.2s;
+}
+.card-product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+.btn-warning {
+    background-color: #d4a373 !important;
+    border-color: #d4a373 !important;
+    color: #fff !important;
+}
+.btn-warning:hover {
+    background-color: #b98453 !important;
+}

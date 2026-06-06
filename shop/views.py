@@ -10,7 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 # Импорты для Django REST Framework
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from .serializers import (
     ProductSerializer, CategorySerializer, 
     ManufacturerSerializer, CartSerializer, CartItemSerializer
@@ -20,30 +20,21 @@ from .models import Product, Category, Manufacturer, Cart, CartItem
 
 
 # =====================================================================
-# 1. СТАТИЧЕСКИЕ / ИНФОРМАЦИОННЫЕ СТРАНИЦЫ (Для обычного сайта)
+# 1. СТАТИЧЕСКИЕ И ГЛАВНЫЕ СТРАНИЦЫ (Рендеринг через Django Templates)
 # =====================================================================
 
 def home_page(request):
-    html_content = """
-    <div style="font-family: Arial, sans-serif; margin: 40px;">
-        <h1>Магазин тематических кружек и термосов</h1>
-        <p>Добро пожаловать на главную страницу!</p>
-        <hr>
-        <h3>Быстрая навигация:</h3>
-        <ul>
-            <li><a href="/catalog/">🛒 Перейти в каталог товаров</a></li>
-            <li><a href="/cart/">📦 Открыть мою корзину</a></li>
-            <li><a href="/about-store/">ℹ️ О магазине</a></li>
-            <li><a href="/about-author/">👨‍💻 Об авторе</a></li>
-            <li><a href="/api/">🌐 Документация REST API</a></li>
-        </ul>
-    </div>
-    """
-    return HttpResponse(html_content)
+    """Главная страница: передает последние 6 новинок и список категорий"""
+    popular_products = Product.objects.all().order_by('-id')[:6]
+    categories = Category.objects.all()
+    return render(request, 'shop/index.html', {
+        'popular_products': popular_products,
+        'categories': categories
+    })
 
 
 def about_store_page(request):
-    text = "Лабораторная работа: Реализация CRUD-операций и интеграция со сторонними библиотеками в Django."
+    text = "Лабораторная работа: Разработка клиентского интерфейса интернет-магазина с использованием Bootstrap 5 и Fetch API."
     return HttpResponse(text, content_type="text/plain; charset=utf-8")
 
 
@@ -53,39 +44,27 @@ def about_author_page(request):
 
 
 # =====================================================================
-# 2. КАТАЛОГ ТОВАРОВ И ФИЛЬТРАЦИЯ (Для обычного сайта)
+# 2. КАТАЛОГ И ДЕТАЛИ (Каркас страниц под динамику и шаблоны)
 # =====================================================================
 
 def product_list(request):
-    query = request.GET.get('q', '')
-    category_id = request.GET.get('category', '')
-    
-    products = Product.objects.all()
+    """Отдает страницу каталога с фильтрами (сетка товаров подгружается через JS)"""
     categories = Category.objects.all()
-
-    # Поиск по названию или описанию
-    if query:
-        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
-        
-    # Фильтрация по категории
-    if category_id:
-        products = products.filter(category_id=category_id)
-
-    return render(request, 'shop/product_list.html', {
-        'products': products,
+    manufacturers = Manufacturer.objects.all()
+    return render(request, 'shop/catalog.html', {
         'categories': categories,
-        'query': query,
-        'selected_category': category_id
+        'manufacturers': manufacturers
     })
 
 
 def product_detail(request, pk):
+    """Детальная страница конкретной кружки/термоса"""
     product = get_object_or_404(Product, pk=pk)
     return render(request, 'shop/product_detail.html', {'product': product})
 
 
 # =====================================================================
-# 3. ЛОГИКА РАБОТЫ КОРЗИНЫ (Для обычного сайта)
+# 3. УПРАВЛЕНИЕ КОРЗИНОЙ (Обычные HTML-представления)
 # =====================================================================
 
 @login_required(login_url='/admin/login/')
@@ -97,6 +76,7 @@ def cart_view(request):
 
 @login_required(login_url='/admin/login/')
 def add_to_cart(request, product_id):
+    """Синхронное добавление в корзину (для детальной страницы товара)"""
     product = get_object_or_404(Product, id=product_id)
     cart, created = Cart.objects.get_or_create(user=request.user)
     
@@ -135,7 +115,7 @@ def remove_from_cart(request, item_id):
 
 
 # =====================================================================
-# 4. ОФОРМЛЕНИЕ ЗАКАЗА, EXCEL И EMAIL (Для обычного сайта)
+# 4. ОФОРМЛЕНИЕ ЗАКАЗА (Генерация Excel и отправка Email)
 # =====================================================================
 
 @login_required(login_url='/admin/login/')
@@ -143,7 +123,6 @@ def checkout(request):
     cart = get_object_or_404(Cart, user=request.user)
     cart_items = cart.items.all()
 
-    # Если корзина пуста, оформлять нечего
     if not cart_items:
         return redirect('product_list')
 
@@ -151,7 +130,7 @@ def checkout(request):
         address = request.POST.get('address', '')
         comment = request.POST.get('comment', '')
 
-        # --- ГЕНЕРАЦИЯ EXCEL ЧЕКА (openpyxl) ---
+        # Генерация Excel
         wb = Workbook()
         ws = wb.active
         ws.title = "Чек заказа"
@@ -173,7 +152,7 @@ def checkout(request):
                 float(item.item_price)
             ])
             
-            # Уменьшаем остатки на складе
+            # Уменьшаем остатки товара на складе
             item.product.stock -= item.quantity
             item.product.save()
 
@@ -189,15 +168,15 @@ def checkout(request):
         wb.save(excel_buffer)
         excel_buffer.seek(0)
 
-        # --- ОТПРАВКА EMAIL С КОНСОЛЬНЫМ БЭКЕНДОМ ---
+        # Отправка Email
         subject = f"Заказ успешно оформлен! Чек для {request.user.username}"
         body = (
             f"Здравствуйте, {request.user.username}!\n\n"
-            f"Ваш заказ успешно принят в обработку.\n"
+            f"Ваш заказ успешно принят.\n"
             f"Адрес доставки: {address}\n"
             f"Комментарий: {comment}\n\n"
-            f"Детализированный чек в формате Excel прикреплен к этому письму.\n"
-            f"Спасибо за покупку в нашем магазине кружек и термосов!"
+            f"Чек в формате Excel прикреплен к письму.\n"
+            f"Спасибо за покупку в CupStore!"
         )
         
         email = EmailMessage(
@@ -215,13 +194,13 @@ def checkout(request):
         
         email.send()
 
-        # Очищаем корзину покупателя
+        # Очистка корзины
         cart_items.delete()
 
         return HttpResponse("""
             <div style="text-align: center; margin-top: 50px; font-family: Arial;">
                 <h1 style="color: green;">Заказ успешно оформлен!</h1>
-                <p>Чек в формате Excel сгенерирован и отправлен вам на Email (отображен в консоли терминала).</p>
+                <p>Чек в формате Excel отправлен вам на Email (отображен в консоли бэкенда).</p>
                 <a href="/catalog/">Вернуться в каталог</a>
             </div>
         """)
@@ -230,7 +209,7 @@ def checkout(request):
 
 
 # =====================================================================
-# 5. DJANGO REST FRAMEWORK (API Контроллеры)
+# 5. ДИНАМИЧЕСКИЙ DJANGO REST FRAMEWORK (API Контроллеры)
 # =====================================================================
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -244,8 +223,24 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
+    """API для работы с товарами. Поддерживает динамический поиск и фильтрацию."""
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description']
+
+    def get_queryset(self):
+        """Переопределяем для обработки точной фильтрации по категориям и производителям"""
+        queryset = Product.objects.all()
+        category_id = self.request.query_params.get('category')
+        manufacturer_id = self.request.query_params.get('manufacturer')
+        
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        if manufacturer_id:
+            queryset = queryset.filter(manufacturer_id=manufacturer_id)
+            
+        return queryset
 
 
 class CartViewSet(viewsets.ModelViewSet):
@@ -256,3 +251,19 @@ class CartViewSet(viewsets.ModelViewSet):
 class CartItemViewSet(viewsets.ModelViewSet):
     queryset = CartItem.objects.all()
     serializer_class = CartItemSerializer
+
+    def perform_create(self, serializer):
+        """Автоматически привязывает добавляемый товар к корзине текущего юзера"""
+        user_cart, created = Cart.objects.get_or_create(user=self.request.user)
+        product = serializer.validated_data['product']
+        
+        # Проверяем, есть ли уже этот товар в корзине
+        existing_item = CartItem.objects.filter(cart=user_cart, product=product).first()
+        if existing_item:
+            if existing_item.quantity < product.stock:
+                existing_item.quantity += 1
+                existing_item.save()
+            # Возвращаем управление, не создавая дубликат
+            return
+            
+        serializer.save(cart=user_cart)

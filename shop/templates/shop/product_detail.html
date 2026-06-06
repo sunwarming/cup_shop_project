@@ -1,32 +1,51 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ product.name }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .product-container { max-width: 600px; background: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        .price { font-size: 20px; color: green; font-weight: bold; }
-        .btn-add { display: inline-block; background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; }
-    </style>
-</head>
-<body>
+{% extends 'shop/base.html' %}
+{% block title %}{{ product.name }} | CupStore{% endblock %}
 
-    <p><a href="{% url 'product_list' %}">← Назад в каталог</a></p>
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Главная</a></li>
+            <li class="breadcrumb-item"><a href="/catalog/" class="text-decoration-none">Каталог</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
 
-    <div class="product-container">
-        <h1>{{ product.name }}</h1>
-        <p><strong>Категория:</strong> {{ product.category.name }}</p>
-        <p><strong>Производитель:</strong> {{ product.manufacturer.name }} ({{ product.manufacturer.country }})</p>
-        <hr>
-        <p><strong>Описание:</strong></p>
-        <p>{{ product.description }}</p>
-        <hr>
-        <p class="price">Цена: {{ product.price }} BYN</p>
-        <p>Доступно: {{ product.stock }} шт.</p>
-        <br>
-        <a href="{% url 'add_to_cart' product.id %}" class="btn-add">🛒 Положить в корзину</a>
+    <div class="row">
+        <div class="col-md-6 mb-4 text-center">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded shadow-sm border" alt="{{ product.name }}" style="max-height: 450px; object-fit: cover;">
+            {% else %}
+                <div class="bg-secondary text-white text-center rounded py-5 d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="bi bi-cup" style="font-size: 6rem;"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <h1 class="fw-bold text-dark mb-2">{{ product.name }}</h1>
+            <p class="text-muted mb-3">Производитель: <span class="badge bg-secondary">{{ product.manufacturer.name }}</span></p>
+            <h3 class="text-success fw-bold mb-4">{{ product.price }} BYN</h3>
+            
+            <div class="card p-3 bg-white shadow-sm mb-4">
+                <h5 class="fw-semibold">Описание товара</h5>
+                <p class="card-text text-secondary" style="line-height: 1.6;">{{ product.description }}</p>
+            </div>
+
+            <div class="mb-4">
+                {% if product.stock > 0 %}
+                    <p class="text-success fw-medium"><i class="bi bi-check-circle-fill"></i> В наличии на складе: {{ product.stock }} шт.</p>
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-warning btn-lg px-5 fw-bold shadow-sm">
+                        <i class="bi bi-cart-plus-fill"></i> Добавить в корзину
+                    </a>
+                {% else %}
+                    <p class="text-danger fw-medium"><i class="bi bi-x-circle-fill"></i> Нет в наличии</p>
+                    <button class="btn btn-secondary btn-lg px-5 fw-bold" disabled>
+                        Нет в наличии
+                    </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}

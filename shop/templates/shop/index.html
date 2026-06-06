@@ -1,0 +1,50 @@
+{% extends 'shop/base.html' %}
+{% block title %}Главная | CupStore{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="p-5 mb-5 rounded-3 hero-section shadow-sm">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold"><i class="bi bi-cup-hot text-warning"></i> Идеальная кружка для каждого момента</h1>
+            <p class="col-md-8 fs-4">Найдите кружки с принтами из любимых игр, аниме, программистские термосы с двойными стенками и стильные кружки-хамелеоны. Твой кофе заслуживает лучшего оформления.</p>
+            <a href="/catalog/" class="btn btn-warning btn-lg px-4 fw-bold">Перейти в каталог</a>
+        </div>
+    </div>
+
+    <h2 class="mb-4 text-dark"><i class="bi bi-tags-fill text-secondary"></i> Категории товаров</h2>
+    <div class="row g-3 mb-5">
+        {% for cat in categories %}
+        <div class="col-6 col-md-3">
+            <a href="/catalog/?category={{ cat.id }}" class="btn btn-outline-dark w-100 py-3 text-center shadow-sm">
+                <h5>{{ cat.name }}</h5>
+            </a>
+        </div>
+        {% empty %}
+        <p>Категории временно отсутствуют.</p>
+        {% endfor %}
+    </div>
+
+    <h2 class="mb-4 text-dark"><i class="bi bi-fire text-danger"></i> Новинки и популярные товары</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in popular_products %}
+        <div class="col">
+            <div class="card h-100 shadow-sm card-product">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-secondary text-white text-center py-5" style="height: 250px;"><i class="bi bi-cup" style="font-size: 4rem;"></i></div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">{{ product.name }}</h5>
+                    <p class="card-text text-muted flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="fs-4 fw-bold text-success">{{ product.price }} BYN</span>
+                        <a href="/product/{{ product.id }}/" class="btn btn-outline-dark btn-sm">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
