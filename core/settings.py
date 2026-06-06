@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 1. ОСНОВНЫЕ НАСТРОЙКИ БЕЗОПАСНОСТИ И ОКРУЖЕНИЯ
 # =====================================================================
 
-# Читаем секретный ключ из .env (или переменных Railway). Если его нет — берем дефолтный
+# Читаем секретный ключ из .env или переменных Railway
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-fallback-secret-key-cup-shop')
 
 # Превращаем строковое значение "True"/"False" в реальный тип bool
@@ -19,6 +19,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Парсим разрешенные хосты из строки через запятую
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
+# Явно добавляем домены Railway в список разрешенных хостов
 ALLOWED_HOSTS.append('.up.railway.app')
 ALLOWED_HOSTS.append('web-production-dfe0a.up.railway.app')
 
@@ -49,7 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise должен стоять СРАЗУ после SecurityMiddleware для быстрой раздачи CSS/JS
+    # WhiteNoise стоит сразу после SecurityMiddleware для быстрой раздачи CSS/JS
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,7 +70,6 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Поиск глобальной папки templates, если она есть в корне
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # 5. КОНФИГУРАЦИЯ БАЗЫ ДАННЫХ (SQLite / PostgreSQL)
 # =====================================================================
 
-# Автоматический парсинг переменной DATABASE_URL от Railway. 
+# Автоматический парсинг переменной DATABASE_URL от Railway.
 # Если её нет в системе (локально), плавно откатываемся на db.sqlite3.
 DATABASES = {
     'default': dj_database_url.config(
@@ -132,7 +132,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Настройки для загружаемых картинок кружек
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -156,8 +155,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
-    # По умолчанию для всего проекта требуем авторизацию, 
-    # а в ProductViewSet мы переопределили её на IsAdminOrReadOnly
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
@@ -165,18 +162,21 @@ REST_FRAMEWORK = {
 
 
 # =====================================================================
-# 10. ПРАВИЛА БЕЗОПАСНОСТИ ДЛЯ ПРОДАКШНА (DEBUG = False)
+# 10. ПРАВИЛА БЕЗОПАСНОСТИ И ДОВЕРЕННЫЕ ИСТОЧНИКИ (CSRF)
 # =====================================================================
 
+# Доверяем доменам Railway для отправки любых форм и POST-запросов всегда (включая админку)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.up.railway.app',
+    'https://web-production-dfe0a.up.railway.app'
+]
+
 if not DEBUG:
-    # Защита куки сессий и CSRF-токенов (передача только по HTTPS)
+    # Защита куки сессий и CSRF-токенов (передача строго по HTTPS в продакшене)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    
-    # Доверяем домену Railway для отправки форм и PATCH/POST запросов
-    CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
