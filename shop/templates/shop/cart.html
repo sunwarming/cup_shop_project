@@ -54,6 +54,12 @@
         <div class="total">
             Общая стоимость корзины: {{ cart.total_price }} BYN
         </div>
+        <div class="total">
+            Общая стоимость корзины: {{ cart.total_price }} BYN
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <a href="{% url 'checkout' %}" style="background-color: #28a745; color: white; padding: 12px 20px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Оформить заказ →</a>
+        </div>
     {% else %}
         <p>Ваша корзина пуста. Перейдите в каталог, чтобы выбрать что-нибудь интересное!</p>
     {% endif %}
