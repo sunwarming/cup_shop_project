@@ -19,9 +19,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Парсим разрешенные хосты из строки через запятую
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
-# Если мы залили проект на Railway (DEBUG отключен), автоматически добавляем домен платформы
-if not DEBUG:
-    ALLOWED_HOSTS.append('.up.railway.app')
+ALLOWED_HOSTS.append('.up.railway.app')
+ALLOWED_HOSTS.append('web-production-dfe0a.up.railway.app')
 
 
 # =====================================================================
