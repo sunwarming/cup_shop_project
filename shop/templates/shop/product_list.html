@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог товаров</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
+        .filters { background: #eee; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .product-card { background: white; padding: 15px; border: 1px solid #ddd; border-radius: 5px; display: flex; flex-direction: column; justify-content: space-between; }
+        .price { color: green; font-weight: bold; font-size: 1.1em; }
+        .btn-add { background-color: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 10px; cursor: pointer;}
+        .btn-add:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+    <h1>Каталог товаров</h1>
+    <p><a href="/">← На главную</a> | <a href="{% url 'cart_view' %}">🛒 Перейти в корзину</a></p>
+
+    <div class="filters">
+        <form method="GET" action="">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск по названию/описанию...">
+            
+            <select name="category">
+                <option value="">Все категории</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="manufacturer">
+                <option value="">Все производители</option>
+                {% for man in manufacturers %}
+                    <option value="{{ man.id }}" {% if selected_manufacturer == man.id|stringformat:"s" %}selected{% endif %}>{{ man.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Применить</button>
+            <a href="{% url 'product_list' %}">Сбросить</a>
+        </form>
+    </div>
+
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card">
+                <div>
+                    <h3><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                    <p>Категория: <strong>{{ product.category.name }}</strong></p>
+                    <p>Бренд: {{ product.manufacturer.name }}</p>
+                    <p class="price">{{ product.price }} BYN</p>
+                    <p>Остаток: {{ product.stock }} шт.</p>
+                </div>
+                <a href="{% url 'add_to_cart' product.id %}" class="btn-add">Добавить в корзину</a>
+            </div>
+        {% empty %}
+            <p>Товары не найдены.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

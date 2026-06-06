@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Моя корзина</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total { font-size: 1.3em; font-weight: bold; text-align: right; margin-top: 20px; color: #d9534f; }
+        .btn-remove { color: red; text-decoration: none; font-weight: bold; }
+        .btn-update { background: #007bff; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>Ваша корзина (Пользователь: {{ request.user.username }})</h1>
+    <p><a href="{% url 'product_list' %}">← Вернуться в каталог товаров</a></p>
+
+    {% if cart_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Стоимость элемента</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td><a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></td>
+                        <td>{{ item.product.price }} BYN</td>
+                        <td>
+                            <form method="POST" action="{% url 'update_cart' item.id %}" style="display: inline-block;">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" style="width: 50px;">
+                                <button type="submit" class="btn-update">✔</button>
+                            </form>
+                            <small style="color: #666;">(макс. {{ item.product.stock }})</small>
+                        </td>
+                        <td>{{ item.item_price }} BYN</td>
+                        <td>
+                            <a href="{% url 'remove_from_cart' item.id %}" class="btn-remove" onclick="return confirm('Удалить этот товар из корзины?')">Удалить</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="total">
+            Общая стоимость корзины: {{ cart.total_price }} BYN
+        </div>
+    {% else %}
+        <p>Ваша корзина пуста. Перейдите в каталог, чтобы выбрать что-нибудь интересное!</p>
+    {% endif %}
+
+</body>
+</html>
