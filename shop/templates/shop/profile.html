@@ -1,0 +1,191 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Личный кабинет | CupStore{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div id="anonymous-block" class="card p-5 text-center my-5 d-none shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <i class="bi bi-shield-lock text-danger" style="font-size: 4.5rem;"></i>
+            <h2 class="mt-3 fw-bold text-dark">Доступ ограничен</h2>
+            <p class="text-muted fs-5">Для просмотра личного кабинета и управления профилем необходимо войти под своей учетной записью.</p>
+            <div class="mt-4">
+                <a href="/admin/login/?next=/profile/" class="btn btn-warning btn-lg px-5 fw-bold shadow-sm">Войти в аккаунт</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-block" class="row d-none">
+        
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm p-4 bg-white border-0 rounded-3">
+                <div class="text-center mb-3">
+                    <i class="bi bi-person-badge-fill text-warning" style="font-size: 4.5rem;"></i>
+                    <h3 id="profile-username" class="fw-bold mb-1">Загрузка...</h3>
+                    <div id="user-role-badge" class="badge bg-secondary fs-6 mt-2 px-3 py-2">Обычный покупатель</div>
+                </div>
+                <hr class="text-muted">
+                
+                <form id="profile-form">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Полное имя</label>
+                        <input type="text" id="input-fullname" class="form-control" placeholder="Иван Иванов">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Email адрес</label>
+                        <input type="email" id="input-email" class="form-control" placeholder="example@mail.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Номер телефона</label>
+                        <input type="text" id="input-phone" class="form-control" placeholder="+375 (XX) XXX-XX-XX">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Адрес для доставки</label>
+                        <input type="text" id="input-address" class="form-control" placeholder="ул. Сурганова, д. 20">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="bi bi-cup-hot text-danger me-1"></i>Любимый тип кружек
+                        </label>
+                        <input type="text" id="input-mugtype" class="form-control" placeholder="Термокружки, Хамелеоны...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="bi bi-geo-alt text-primary me-1"></i>Город отправки заказа
+                        </label>
+                        <input type="text" id="input-city" class="form-control" placeholder="Минск">
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 fw-bold mt-3 py-2 shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i>Сохранить изменения
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow-sm p-4 bg-white border-0 rounded-3">
+                <h4 class="fw-bold mb-4 text-dark">
+                    <i class="bi bi-clock-history text-secondary me-2"></i>Мои заказы
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Номер заказа</th>
+                                <th>Статус выполнения</th>
+                                <th>Дополнительно</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong class="text-dark">Заказ #1048</strong><br>
+                                    <small class="text-muted">Набор керамических кружек (2 шт.)</small>
+                                </td>
+                                <td><span class="badge bg-success px-2 py-1">Выполнен</span></td>
+                                <td>
+                                    <button class="btn btn-outline-dark btn-sm fw-semibold" onclick="alert('Детали заказа отправлены файлом отчета на вашу почту!')">
+                                        Подробнее
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong class="text-dark">Заказ #1102</strong><br>
+                                    <small class="text-muted">Термос стальной CupStore</small>
+                                </td>
+                                <td><span class="badge bg-warning text-dark px-2 py-1">В обработке</span></td>
+                                <td>
+                                    <button class="btn btn-outline-dark btn-sm fw-semibold" onclick="alert('Товар комплектуется на основном складе в г. Минске.')">
+                                        Подробнее
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const anonBlock = document.getElementById('anonymous-block');
+    const profileBlock = document.getElementById('profile-block');
+    const form = document.getElementById('profile-form');
+
+    // 1. ЗАПРОС НА ПОЛУЧЕНИЕ ДАННЫХ ПРОФИЛЯ (GET)
+    fetch('/api/me/')
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                anonBlock.classList.remove('d-none'); // Показываем заглушку
+                throw new Error('Пользователь не авторизован');
+            }
+            return response.json();
+        })
+        .then(user => {
+            profileBlock.classList.remove('d-none'); // Показываем основной блок ЛК
+            document.getElementById('profile-username').textContent = user.username;
+            
+            // Визуальное отображение роли пользователя
+            const roleBadge = document.getElementById('user-role-badge');
+            if (user.is_admin) {
+                roleBadge.textContent = 'Администратор магазина';
+                roleBadge.className = 'badge bg-danger fs-6 mt-2 px-3 py-2';
+            } else {
+                roleBadge.textContent = 'Обычный покупатель';
+                roleBadge.className = 'badge bg-secondary fs-6 mt-2 px-3 py-2';
+            }
+
+            // Предзаполнение полей формы значениями с сервера
+            document.getElementById('input-fullname').value = user.profile.full_name || '';
+            document.getElementById('input-email').value = user.email || '';
+            document.getElementById('input-phone').value = user.profile.phone || '';
+            document.getElementById('input-address').value = user.profile.address || '';
+            document.getElementById('input-mugtype').value = user.profile.favorite_mug_type || '';
+            document.getElementById('input-city').value = user.profile.delivery_city || '';
+        })
+        .catch(err => console.warn(err.message));
+
+    // 2. ОТПРАВКА ОБНОВЛЕНИЙ ПРОФИЛЯ НА СЕРВЕР (PATCH)
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Сборка JSON структуры в соответствии со вложенным ProfileSerializer
+        const updatedData = {
+            email: document.getElementById('input-email').value,
+            profile: {
+                full_name: document.getElementById('input-fullname').value,
+                phone: document.getElementById('input-phone').value,
+                address: document.getElementById('input-address').value,
+                favorite_mug_type: document.getElementById('input-mugtype').value,
+                delivery_city: document.getElementById('input-city').value
+            }
+        };
+
+        fetch('/api/me/', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken // Токен безопасности из base.html
+            },
+            body: JSON.stringify(updatedData)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка обновления данных на стороне сервера');
+            return response.json();
+        })
+        .then(data => {
+            alert('Данные вашего профиля CupStore успешно сохранены!');
+        })
+        .catch(err => alert(err.message));
+    });
+});
+</script>
+{% endblock %}

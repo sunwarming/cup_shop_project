@@ -5,61 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CupStore | Магазин кружек{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        footer {
+            background-color: #212529;
+            color: #ccc;
+        }
+    </style>
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-cup-hot-fill me-2 text-warning"></i>
-                <strong>CupStore</strong>
+            <a class="navbar-brand text-warning" href="/">
+                <i class="bi bi-cup-hot-fill me-2"></i>CupStore
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-span"></span>
+                <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Главная</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/catalog/">Каталог</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/cart/">Корзина</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/catalog/">Каталог</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile/">Личный кабинет</a>
+                    </li>
                 </ul>
-                <div class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <span class="navbar-text me-3 text-light">
-                            <i class="bi bi-person-circle"></i> {{ user.username }}
-                        </span>
-                        <a href="/admin/logout/" class="btn btn-outline-danger btn-sm">Выйти</a>
-                    {% else %}
-                        <a href="/admin/login/" class="btn btn-outline-warning btn-sm">Войти</a>
-                    {% endif %}
+                <div class="d-flex">
+                    <a href="/admin/" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-shield-lock-fill me-1"></i>Админ-панель
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-3" id="alert-container"></div>
-
-    <main class="flex-grow-1 my-4">
+    <main class="min-vh-100">
         {% block content %}
         {% endblock %}
     </main>
 
-    <footer class="bg-dark text-light py-4 mt-auto border-top border-warning border-3">
-        <div class="container text-center">
-            <p class="mb-1">© 2026 CupStore — Эксклюзивные тематические кружки и надежные термосы.</p>
-            <small class="text-muted">Лабораторная работа по веб-программированию. Выполнил Козик Николай.</small>
+    <footer class="text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-1">&copy; 2026 CupStore. Все права защищены.</p>
+            <small class="text-muted">Лабораторная работа по веб-программированию на Django</small>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
-        const csrftoken = '{{ csrf_token }}';
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
     </script>
-    
+
     {% block scripts %}
     {% endblock %}
 </body>
