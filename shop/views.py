@@ -9,12 +9,19 @@ from django.core.mail import EmailMessage
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
+# Импорты для Django REST Framework
+from rest_framework import viewsets
+from .serializers import (
+    ProductSerializer, CategorySerializer, 
+    ManufacturerSerializer, CartSerializer, CartItemSerializer
+)
+
 from .models import Product, Category, Manufacturer, Cart, CartItem
 
 
-# ==========================================
-# 1. СТАТИЧЕСКИЕ / ИНФОРМАЦИОННЫЕ СТРАНИЦЫ
-# ==========================================
+# =====================================================================
+# 1. СТАТИЧЕСКИЕ / ИНФОРМАЦИОННЫЕ СТРАНИЦЫ (Для обычного сайта)
+# =====================================================================
 
 def home_page(request):
     html_content = """
@@ -28,6 +35,7 @@ def home_page(request):
             <li><a href="/cart/">📦 Открыть мою корзину</a></li>
             <li><a href="/about-store/">ℹ️ О магазине</a></li>
             <li><a href="/about-author/">👨‍💻 Об авторе</a></li>
+            <li><a href="/api/">🌐 Документация REST API</a></li>
         </ul>
     </div>
     """
@@ -44,9 +52,9 @@ def about_author_page(request):
     return HttpResponse(text, content_type="text/plain; charset=utf-8")
 
 
-# ==========================================
-# 2. КАТАЛОГ ТОВАРОВ И ФИЛЬТРАЦИЯ
-# ==========================================
+# =====================================================================
+# 2. КАТАЛОГ ТОВАРОВ И ФИЛЬТРАЦИЯ (Для обычного сайта)
+# =====================================================================
 
 def product_list(request):
     query = request.GET.get('q', '')
@@ -76,9 +84,9 @@ def product_detail(request, pk):
     return render(request, 'shop/product_detail.html', {'product': product})
 
 
-# ==========================================
-# 3. ЛОГИКА РАБОТЫ КОРЗИНЫ (CART)
-# ==========================================
+# =====================================================================
+# 3. ЛОГИКА РАБОТЫ КОРЗИНЫ (Для обычного сайта)
+# =====================================================================
 
 @login_required(login_url='/admin/login/')
 def cart_view(request):
@@ -126,9 +134,9 @@ def remove_from_cart(request, item_id):
     return redirect('cart_view')
 
 
-# ==========================================
-# 4. ОФОРМЛЕНИЕ ЗАКАЗА, EXCEL И EMAIL
-# ==========================================
+# =====================================================================
+# 4. ОФОРМЛЕНИЕ ЗАКАЗА, EXCEL И EMAIL (Для обычного сайта)
+# =====================================================================
 
 @login_required(login_url='/admin/login/')
 def checkout(request):
@@ -181,7 +189,7 @@ def checkout(request):
         wb.save(excel_buffer)
         excel_buffer.seek(0)
 
-        # --- ОТПРАВКА EMAIL ---
+        # --- ОТПРАВКА EMAIL С КОНСОЛЬНЫМ БЭКЕНДОМ ---
         subject = f"Заказ успешно оформлен! Чек для {request.user.username}"
         body = (
             f"Здравствуйте, {request.user.username}!\n\n"
@@ -219,3 +227,32 @@ def checkout(request):
         """)
 
     return render(request, 'shop/checkout.html', {'cart': cart, 'cart_items': cart_items})
+
+
+# =====================================================================
+# 5. DJANGO REST FRAMEWORK (API Контроллеры)
+# =====================================================================
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class ManufacturerViewSet(viewsets.ModelViewSet):
+    queryset = Manufacturer.objects.all()
+    serializer_class = ManufacturerSerializer
+
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+
+class CartItemViewSet(viewsets.ModelViewSet):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
